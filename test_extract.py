@@ -12,7 +12,7 @@
 #
 # Date:     2013-01-14
 #
-# Author:   lidonghui01@baidu.com
+# Author:   gewu@baidu.com
 #
 #
 
