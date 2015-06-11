@@ -1,0 +1,1 @@
+Extract html common template
