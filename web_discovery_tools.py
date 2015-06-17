@@ -26,6 +26,7 @@
 
 import re
 import chardet
+from collections import Counter
 from chardet.universaldetector import UniversalDetector
 
 class Web_Discovery_Tools(object):
@@ -72,6 +73,41 @@ class Web_Discovery_Tools(object):
         return text
 
     @classmethod
+    def getLongestSamePre(self, urlL):
+        urlL.sort(key=len, reverse=True)
+        cnt = Counter()
+        beg = 1
+        newUrl = urlL[0]
+
+        while beg < len(urlL):
+            newUrl = self.longestSamePre(newUrl, urlL[beg])
+            cnt[newUrl] += 1
+            beg += 1
+
+        for k in cnt.most_common():
+            if k[0].count("/") > 3:
+                return k[0], k[1]
+        return "", 0
+
+    @classmethod
+    def longestSamePre(self, urlPre, urlNext):
+        urlPre = urlPre[:urlPre.rfind("/")+1]
+        urlNext = urlNext[:urlNext.rfind("/")+1]
+        urlLen = len(urlPre)
+        if (len(urlNext) < len(urlPre)):
+            urlLen = len(urlNext)
+        ret = 0
+        while ret < urlLen:
+            if urlPre[ret] != urlNext[ret]:
+                break
+            ret += 1
+        if ret <= 11:   #len(http://www.)    
+            return urlNext
+        
+        newurl = urlPre[:ret]   #find "/" longest predix 
+        return newurl[:newurl.rfind("/")+1]
+
+    @classmethod
     def get_title(self, text):
         re_t = re.compile(r"<h1[^>]*>([^<]+?)</h1>")
         re_h = re.compile(r"<title[^>]*>([^<]+?)</title>")
@@ -100,7 +136,10 @@ class Web_Discovery_Tools(object):
         if match:
             ret = match.group(1)
         else:
-            ret = chardet.detect(text)['encoding']
+            ret = chardet.detect(text)['encoding'] 
+        if ret is None:
+            return ""
+
         if "utf" in ret or "UTF" in ret:
             try:
                 text.decode("utf-8", "igonre")
@@ -108,7 +147,9 @@ class Web_Discovery_Tools(object):
                 text = text.decode("gbk", 'ignore').encode("utf-8")
         if "gb" in ret or "GB" in ret:
             text = text.decode("gbk", 'ignore').encode("utf-8")
-        return text;
+        if "BIG" in ret or "big" in ret:
+            text = text.decode("big5", 'ignore').encode("utf-8")
+        return text
     
     @classmethod
     def get_content(self, text):
@@ -157,8 +198,9 @@ class Web_Discovery_Tools(object):
                         break
                     k += 1
 
-                content = lines[j:k+1]
-                return "".join(content)
+
+                content = lines[j:k+1]           
+                return "".join(content)[:20000]   #the len of content shall < 20000
             else:
                 preTextLen -= len(lines[i-depth])
             i += 1
@@ -171,4 +213,4 @@ class Web_Discovery_Tools(object):
         #'''
 
 if __name__ == "__main__":
-    pass
+    print Web_Discovery_Tools.encodeUTF8("")
